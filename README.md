@@ -1,6 +1,20 @@
 # AI Tools Database
 
-Aggregated database of AI tools, models, and services — inspired by [There's An AI For That](https://theresanaiforthat.com/). Collects data from multiple public APIs, classifies tools deterministically (no LLM hallucinations), and exposes a REST API.
+Aggregated database of **43,000+ AI tools**, models, and services — inspired by [There's An AI For That](https://theresanaiforthat.com/). Collects data from multiple public APIs, classifies tools deterministically (no LLM hallucinations), and exposes both a web UI and REST API.
+
+## Screenshots
+
+### Dashboard
+![Dashboard](docs/screenshots/dashboard.png)
+
+### Browse Tools
+![Browse](docs/screenshots/browse.png)
+
+### Domains & Categories
+![Domains](docs/screenshots/domains.png)
+
+### Tool Detail
+![Tool Detail](docs/screenshots/tool_detail.png)
 
 ## Architecture
 
@@ -11,19 +25,19 @@ Sources → Ingesters → PostgreSQL → Enrichment → FastAPI REST API
 ```
 
 ### Data sources
-| Source | What it fetches | Auth required |
-|--------|----------------|---------------|
-| HuggingFace | Trending Spaces (2 000 max) | No |
-| GitHub | Repos by AI topics (stars > threshold) | Token (optional but recommended) |
-| Product Hunt | AI-tagged launches | Bearer token |
-| Hacker News | Show HN + new stories with AI keywords | No |
-| Reddit | Posts from AI subreddits with external links | OAuth2 client credentials |
+| Source | What it fetches | Auth | Tools |
+|--------|----------------|------|-------|
+| HuggingFace | Trending Spaces | No | 323 |
+| GitHub | Repos by AI topics | Token (free) | 36,459 |
+| Product Hunt | AI-tagged launches | Bearer token (free) | 1,183 |
+| Hacker News | Show HN + AI stories (Algolia) | No | 8,255 |
 
 ### Classification
 All categorisation is **rule-based** — zero LLM involvement:
-1. **TAG_MAP** (~150 entries): source tags → `(domain, category)` via voting
-2. **Keyword regex** (~25 patterns): fallback on name + description
-3. Unclassified tools get `domain=NULL` for manual review
+1. **TAG_MAP** (~200 entries): source tags → `(domain, category)` via voting
+2. **Keyword regex** (~45 patterns): fallback on name + description
+3. **Auto-reclassify**: enrichment pipeline re-classifies unclassified tools on every run
+4. 98.8% classification rate across 43,000+ tools
 
 LLM (gpt-4o-mini) is **only** used for optional pricing/summary extraction from homepages — never classification.
 
@@ -74,7 +88,7 @@ docker compose exec app python manage.py ingest
 
 | Command | Description |
 |---------|-------------|
-| `python manage.py ingest [--source NAME]` | Run ingestion (all or specific source) |
+| `python manage.py ingest [--source NAME] [--deep]` | Run ingestion (all or specific source) |
 | `python manage.py enrich [--dedup] [--score] [--llm]` | Run enrichment pipeline |
 | `python manage.py stats` | Show database statistics |
 | `python manage.py export [OUTPUT] [--min-legitimacy N]` | Export to CSV |
@@ -128,13 +142,13 @@ Deterministic, rule-based scoring:
 │   │   └── classifier.py      # classify_tool() — deterministic
 │   ├── ingesters/
 │   │   ├── base.py            # BaseIngester ABC + upsert logic
-│   │   ├── huggingface.py
-│   │   ├── github.py
-│   │   ├── producthunt.py
-│   │   ├── hackernews.py
-│   │   └── reddit.py
+│   │   ├── huggingface.py     # Deep mode: 3 sort orders
+│   │   ├── github.py          # Deep mode: 60 queries
+│   │   ├── producthunt.py     # Deep mode: 6 AI topics
+│   │   └── hackernews.py      # Deep mode: Algolia search API
 │   ├── enrichment/
 │   │   ├── dedup.py           # Cross-source URL dedup & merge
+│   │   ├── reclassify.py      # Re-classify NULL-domain tools
 │   │   ├── legitimacy.py      # Rule-based 0-100 scoring
 │   │   └── llm_extract.py     # Optional pricing/summary extraction
 │   └── api/
@@ -149,5 +163,10 @@ Deterministic, rule-based scoring:
 ## Scheduler
 
 When running via `manage.py serve`, the APScheduler runs:
-- **Ingestion**: every 6 hours (all sources)
-- **Enrichment**: daily at 03:00 (dedup → scoring → optional LLM)
+
+| Job | Schedule | Sources |
+|-----|----------|--------|
+| Free-tier ingestion | Every 4 hours at :05 | HackerNews + HuggingFace |
+| GitHub ingestion | Every 6 hours at :15 | GitHub |
+| ProductHunt ingestion | Every 12 hours at :25 | ProductHunt |
+| Enrichment | Twice daily (03:00, 15:00) | Dedup → Reclassify → Score |
