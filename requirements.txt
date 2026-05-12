@@ -1,0 +1,28 @@
+# Core
+fastapi==0.115.6
+uvicorn[standard]==0.34.0
+pydantic==2.10.4
+pydantic-settings==2.7.1
+
+# Database
+sqlalchemy==2.0.36
+asyncpg==0.30.0
+alembic==1.14.1
+psycopg2-binary==2.9.10
+
+# HTTP clients
+httpx==0.28.1
+
+# Scheduling
+apscheduler==3.11.0
+
+# CLI
+click==8.1.8
+rich==13.9.4
+
+# LLM extraction (optional)
+openai==1.58.1
+
+# Utilities
+python-slugify==8.0.4
+python-dotenv==1.0.1

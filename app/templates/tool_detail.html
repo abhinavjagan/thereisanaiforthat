@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+{% block title %}{{ tool.name }} — AI Tools Database{% endblock %}
+{% block content %}
+
+<div class="tool-detail">
+  <div style="margin-bottom:8px">
+    <a href="/browse{{ '?domain=' + tool.domain if tool.domain else '' }}" style="font-size:0.9rem; color:var(--text-muted)">← Back to browse</a>
+  </div>
+
+  <h1>{{ tool.name }}</h1>
+
+  <div class="meta-row">
+    {% if tool.domain %}
+    <span class="tag tag-domain" style="font-size:0.9rem; padding:4px 14px">{{ tool.domain }}</span>
+    {% endif %}
+    {% if tool.category %}
+    <span class="tag" style="font-size:0.9rem; padding:4px 14px">{{ tool.category }}</span>
+    {% endif %}
+    {% if tool.pricing_type and tool.pricing_type != 'unknown' %}
+    <span class="tag tag-source" style="font-size:0.9rem; padding:4px 14px">{{ tool.pricing_type }}</span>
+    {% endif %}
+    {% if tool.legitimacy_score is not none %}
+    <span class="legitimacy-badge {{ 'legitimacy-high' if tool.legitimacy_score >= 65 else ('legitimacy-mid' if tool.legitimacy_score >= 40 else 'legitimacy-low') }}" style="font-size:0.9rem; padding:5px 14px">
+      Score: {{ tool.legitimacy_score }}/100
+    </span>
+    {% endif %}
+    {% if tool.homepage_url %}
+    <a href="{{ tool.homepage_url }}" target="_blank" rel="noopener" class="btn btn-sm">Visit Homepage →</a>
+    {% endif %}
+  </div>
+
+  <!-- Description -->
+  {% if tool.description %}
+  <div class="detail-section">
+    <h2>Description</h2>
+    <p style="white-space:pre-wrap; word-break:break-word;">{{ tool.description }}</p>
+  </div>
+  {% endif %}
+
+  {% if tool.summary %}
+  <div class="detail-section">
+    <h2>Summary</h2>
+    <p>{{ tool.summary }}</p>
+  </div>
+  {% endif %}
+
+  <!-- Tags -->
+  {% if tool.tags %}
+  <div class="detail-section">
+    <h2>Tags</h2>
+    <div style="display:flex; flex-wrap:wrap; gap:8px;">
+      {% for t in tool.tags %}
+      <span class="tag">{{ t.tag }}</span>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Sources -->
+  {% if tool.sources %}
+  <div class="detail-section">
+    <h2>Sources ({{ tool.sources | length }})</h2>
+    <ul class="sources-list">
+      {% for src in tool.sources %}
+      <li>
+        <div>
+          <span class="tag tag-source" style="margin-right:8px">{{ src.source_type }}</span>
+          <code style="font-size:0.85rem; color:var(--text-muted)">{{ src.source_id }}</code>
+        </div>
+        {% if src.source_url %}
+        <a href="{{ src.source_url }}" target="_blank" rel="noopener" style="font-size:0.85rem">Open →</a>
+        {% endif %}
+      </li>
+      {% endfor %}
+    </ul>
+  </div>
+  {% endif %}
+
+  <!-- Metrics -->
+  {% if tool.metrics %}
+  <div class="detail-section">
+    <h2>Metrics</h2>
+    <div class="metrics-grid">
+      {% set ns = namespace(max_stars=0, max_likes=0, max_trending=0) %}
+      {% for m in tool.metrics %}
+        {% if m.stars and m.stars > ns.max_stars %}{% set ns.max_stars = m.stars %}{% endif %}
+        {% if m.likes and m.likes > ns.max_likes %}{% set ns.max_likes = m.likes %}{% endif %}
+        {% if m.trending_score and m.trending_score > ns.max_trending %}{% set ns.max_trending = m.trending_score %}{% endif %}
+      {% endfor %}
+      {% if ns.max_stars > 0 %}
+      <div class="metric-item">
+        <div class="val">{{ "{:,}".format(ns.max_stars) }}</div>
+        <div class="lbl">Stars</div>
+      </div>
+      {% endif %}
+      {% if ns.max_likes > 0 %}
+      <div class="metric-item">
+        <div class="val">{{ "{:,}".format(ns.max_likes) }}</div>
+        <div class="lbl">Likes</div>
+      </div>
+      {% endif %}
+      {% if ns.max_trending > 0 %}
+      <div class="metric-item">
+        <div class="val">{{ ns.max_trending }}</div>
+        <div class="lbl">Trending Score</div>
+      </div>
+      {% endif %}
+      <div class="metric-item">
+        <div class="val">{{ tool.sources | length }}</div>
+        <div class="lbl">Sources</div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Timestamps -->
+  <div class="detail-section" style="font-size:0.85rem; color:var(--text-muted)">
+    <p>First seen: {{ tool.created_at.strftime('%B %d, %Y at %H:%M UTC') if tool.created_at else 'Unknown' }}</p>
+    {% if tool.updated_at %}
+    <p>Last updated: {{ tool.updated_at.strftime('%B %d, %Y at %H:%M UTC') }}</p>
+    {% endif %}
+  </div>
+</div>
+
+{% endblock %}

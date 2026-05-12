@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}AI Tools Database{% endblock %}</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <header>
+    <div class="container">
+      <a href="/" class="logo">AI<span>Tools</span>DB</a>
+      <form class="search-bar" action="/search" method="get">
+        <input type="text" name="q" placeholder="Search 1,800+ AI tools..." value="{{ q or '' }}">
+        <button type="submit">Search</button>
+      </form>
+      <nav>
+        <a href="/" class="{{ 'active' if active_page == 'home' else '' }}">Dashboard</a>
+        <a href="/browse" class="{{ 'active' if active_page == 'browse' else '' }}">Browse</a>
+        <a href="/domains" class="{{ 'active' if active_page == 'domains' else '' }}">Domains</a>
+        <a href="/docs" target="_blank">API</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container">
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer style="text-align:center; padding:40px 20px; color:var(--text-muted); font-size:0.85rem;">
+    AI Tools Database &middot; {{ total_tools or '' }} tools indexed
+  </footer>
+</body>
+</html>

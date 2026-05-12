@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block title %}Browse AI Tools{% endblock %}
+{% block content %}
+
+<h1 class="page-title">
+  {% if domain %}{{ domain }} tools{% elif q %}Search: "{{ q }}"{% else %}All AI Tools{% endif %}
+</h1>
+<p class="page-subtitle">{{ total }} tools found</p>
+
+<!-- Filters -->
+<form class="filters" method="get" action="/browse">
+  <select name="domain">
+    <option value="">All Domains</option>
+    {% for d in all_domains %}
+    <option value="{{ d.key }}" {{ 'selected' if domain == d.key else '' }}>{{ d.name }} ({{ domain_counts.get(d.key, 0) }})</option>
+    {% endfor %}
+  </select>
+
+  <select name="category">
+    <option value="">All Categories</option>
+    {% for cat in categories %}
+    <option value="{{ cat }}" {{ 'selected' if category == cat else '' }}>{{ cat }}</option>
+    {% endfor %}
+  </select>
+
+  <select name="sort">
+    <option value="newest" {{ 'selected' if sort == 'newest' else '' }}>Newest</option>
+    <option value="legitimacy" {{ 'selected' if sort == 'legitimacy' else '' }}>Top Rated</option>
+    <option value="name" {{ 'selected' if sort == 'name' else '' }}>Name A-Z</option>
+  </select>
+
+  <input type="number" name="min_legitimacy" placeholder="Min score" min="0" max="100"
+         value="{{ min_legitimacy or '' }}" style="width:100px">
+
+  <button type="submit" class="btn">Filter</button>
+  {% if domain or category or min_legitimacy or sort != 'newest' %}
+  <a href="/browse" class="btn btn-outline">Clear</a>
+  {% endif %}
+</form>
+
+{% if tools %}
+<div class="tools-grid">
+  {% for tool in tools %}
+  {% include "partials/tool_card.html" %}
+  {% endfor %}
+</div>
+
+<!-- Pagination -->
+{% if total_pages > 1 %}
+<div class="pagination">
+  {% if page > 1 %}
+  <a href="{{ pagination_url(page - 1) }}">← Prev</a>
+  {% endif %}
+
+  {% for p in range(1, total_pages + 1) %}
+    {% if p == page %}
+      <span class="current">{{ p }}</span>
+    {% elif p <= 3 or p >= total_pages - 2 or (p >= page - 2 and p <= page + 2) %}
+      <a href="{{ pagination_url(p) }}">{{ p }}</a>
+    {% elif p == 4 or p == total_pages - 3 %}
+      <span style="color:var(--text-muted)">…</span>
+    {% endif %}
+  {% endfor %}
+
+  {% if page < total_pages %}
+  <a href="{{ pagination_url(page + 1) }}">Next →</a>
+  {% endif %}
+</div>
+{% endif %}
+
+{% else %}
+<div class="empty-state">
+  <div class="icon">🔍</div>
+  <p>No tools found matching your criteria.</p>
+  <a href="/browse" class="btn" style="margin-top:16px">Clear Filters</a>
+</div>
+{% endif %}
+
+{% endblock %}

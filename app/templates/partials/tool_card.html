@@ -1,0 +1,37 @@
+<div class="tool-card">
+  <div class="tool-header">
+    <div class="tool-name">
+      <a href="/tool/{{ tool.slug }}">{{ tool.name }}</a>
+    </div>
+    {% if tool.legitimacy_score is not none %}
+    <span class="legitimacy-badge {{ 'legitimacy-high' if tool.legitimacy_score >= 65 else ('legitimacy-mid' if tool.legitimacy_score >= 40 else 'legitimacy-low') }}">
+      {{ tool.legitimacy_score }}
+    </span>
+    {% endif %}
+  </div>
+
+  {% if tool.description %}
+  <div class="tool-desc">{{ tool.description[:200] }}</div>
+  {% elif tool.summary %}
+  <div class="tool-desc">{{ tool.summary }}</div>
+  {% endif %}
+
+  <div class="tool-meta">
+    {% if tool.domain %}
+    <span class="tag tag-domain">{{ tool.domain }}</span>
+    {% endif %}
+    {% if tool.category %}
+    <span class="tag">{{ tool.category }}</span>
+    {% endif %}
+    {% if tool.pricing_type and tool.pricing_type != 'unknown' %}
+    <span class="tag tag-source">{{ tool.pricing_type }}</span>
+    {% endif %}
+  </div>
+
+  <div class="tool-footer">
+    <span>{{ tool.created_at.strftime('%b %d, %Y') if tool.created_at else '' }}</span>
+    {% if tool.homepage_url %}
+    <a href="{{ tool.homepage_url }}" target="_blank" rel="noopener">Visit →</a>
+    {% endif %}
+  </div>
+</div>

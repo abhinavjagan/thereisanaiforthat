@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Domains — AI Tools Database{% endblock %}
+{% block content %}
+
+<h1 class="page-title">Domains & Categories</h1>
+<p class="page-subtitle">Full taxonomy of AI tool categories</p>
+
+<div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(300px, 1fr)); gap:16px; margin:24px 0;">
+  {% for d in domains %}
+  <div class="detail-section">
+    <h2 style="margin-bottom:8px">
+      <a href="/browse?domain={{ d.key }}">{{ d.name }}</a>
+      <span style="font-size:0.8rem; color:var(--text-muted); font-weight:400; margin-left:8px">{{ domain_counts.get(d.key, 0) }} tools</span>
+    </h2>
+    <div style="display:flex; flex-direction:column; gap:6px;">
+      {% for cat in d.categories %}
+      <a href="/browse?domain={{ d.key }}&category={{ cat }}" style="font-size:0.9rem; color:var(--text-muted)">
+        {{ cat }}
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+{% endblock %}
